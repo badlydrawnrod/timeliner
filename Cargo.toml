@@ -1,0 +1,15 @@
+[package]
+name = "timeliner"
+version = "0.1.0"
+authors = ["Badly Drawn Rod <rod@badlydrawngames.com>"]
+description = """
+timeliner is a command line utility that displays the contents of log files in timestamp order.
+"""
+repository = "https://github.com/badlydrawnrod/timeliner"
+readme = "README.md"
+license = "Unlicense OR MIT"
+categories = [ "command-line-utilities" ]
+
+[dependencies]
+chrono = "0.4"
+encoding_rs = "0.8"
