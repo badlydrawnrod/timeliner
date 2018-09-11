@@ -14,6 +14,7 @@ pub enum State {
     Done,
 }
 
+/// A reader for log files with timestamps.
 pub struct LogFileReader<T: BufRead> {
     filename: String,
     lines: Peekable<Utf8LineReader<T>>,
