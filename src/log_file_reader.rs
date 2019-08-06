@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use chrono::offset::TimeZone;
+use chrono::{DateTime, Utc};
 use std::io::BufRead;
 use std::iter::Peekable;
 use utf8_line_reader::Utf8LineReader;
@@ -28,12 +28,12 @@ impl<T: BufRead> LogFileReader<T> {
     /// Creates an LogFileReader for the given filename and reader.
     pub fn new(filename: String, reader: Utf8LineReader<T>) -> LogFileReader<T> {
         LogFileReader {
-            filename,                   // The name of the log file being read.
-            lines: reader.peekable(),   // The lines of the file.
-            format: None,               // The datetime format.
-            length: 0,                  // The length of the timestamp in the given format.
-            timestamp: Utc::now(),      // The last read timestamp.
-            state: State::Hungry,       // What state is this reader in?
+            filename,                 // The name of the log file being read.
+            lines: reader.peekable(), // The lines of the file.
+            format: None,             // The datetime format.
+            length: 0,                // The length of the timestamp in the given format.
+            timestamp: Utc::now(),    // The last read timestamp.
+            state: State::Hungry,     // What state is this reader in?
         }
     }
 
@@ -43,42 +43,36 @@ impl<T: BufRead> LogFileReader<T> {
             return;
         }
 
-        let lines = &mut self.lines;
-
         // Advance the input until we find a line with a timestamp, or reach the end.
-        loop {
-            if let Some(next_line) = lines.peek() {
-                // There's a next line, so see if it starts with a timestamp.
-                if let Ok(line) = next_line {
-                    let line = line.as_str();
-                    if line.len() >= self.length {
-                        // If we don't yet know the timestamp format then attempt to guess it.
-                        if self.format.is_none() {
-                            if let Some((format, length)) = guess_datetime_format(line) {
-                                self.format = Some(format);
-                                self.length = length;
-                            }
+        let lines = &mut self.lines;
+        self.state = State::Done;
+        while let Some(next_line) = lines.peek() {
+            // There's a next line, so see if it starts with a timestamp.
+            if let Ok(line) = next_line {
+                let line = line.as_str();
+                if line.len() >= self.length {
+                    // If we don't yet know the timestamp format then attempt to guess it.
+                    if self.format.is_none() {
+                        if let Some((format, length)) = guess_datetime_format(line) {
+                            self.format = Some(format);
+                            self.length = length;
                         }
+                    }
 
-                        // If we do know the timestamp format then inspect the line to see if it has a timestamp,
-                        // and set our state to Readable if it does.
-                        if let Some(format) = &self.format {
-                            let timestamp: &str = &line[..self.length];
-                            if let Ok(timestamp) = Utc.datetime_from_str(&timestamp, format) {
-                                self.timestamp = timestamp;
-                                self.state = State::Readable;
-                                break;
-                            }
+                    // If we do know the timestamp format then inspect the line to see if it has a timestamp,
+                    // and set our state to Readable if it does.
+                    if let Some(format) = &self.format {
+                        let timestamp: &str = &line[..self.length];
+                        if let Ok(timestamp) = Utc.datetime_from_str(&timestamp, format) {
+                            self.timestamp = timestamp;
+                            self.state = State::Readable;
+                            break;
                         }
                     }
                 }
-            } else {
-                // There isn't a next line.
-                self.state = State::Done;
-                break;
             }
-            // We've established that the next line does not start with a timestamp, so consume it
-            // and move on.
+
+            // The next line does not start with a timestamp, so consume it  and move on.
             lines.next();
         }
     }

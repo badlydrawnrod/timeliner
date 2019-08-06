@@ -11,8 +11,8 @@ use std::iter::Iterator;
 use std::process;
 use utf8_line_reader::Utf8LineReader;
 
-mod utf8_line_reader;
 mod log_file_reader;
+mod utf8_line_reader;
 
 fn main() {
     if let Err(err) = run() {
@@ -21,19 +21,16 @@ fn main() {
     }
 }
 
+type BufferedLogFileReader = LogFileReader<BufReader<File>>;
+
 fn run() -> io::Result<()> {
     let filenames = env::args().skip(1).collect::<Vec<String>>();
 
-    let mut log_file_readers = Vec::new();
-
     // Open all of the files, setting up a Utf8LineReader to read their lines irrespective of their
     // encodings, then wrap them in a filter for valid timestamps.
+    let mut log_file_readers = Vec::new();
     for filename in filenames {
-        let f = File::open(&filename)?;
-        let mut reader = BufReader::new(f);
-        let mut utf8_line_reader = Utf8LineReader::new(reader)?;
-        let mut log_line_reader = LogFileReader::new(filename, utf8_line_reader);
-        log_file_readers.push(log_line_reader);
+        log_file_readers.push(reader_for(filename)?);
     }
 
     loop {
@@ -43,7 +40,8 @@ fn run() -> io::Result<()> {
         }
 
         // Determine which (if any) readable LogFileReader has the earliest timestamp.
-        let reader = log_file_readers.iter_mut()
+        let reader = log_file_readers
+            .iter_mut()
             .filter(|f| f.state == State::Readable)
             .min_by(|a, b| a.timestamp.cmp(&b.timestamp));
 
@@ -59,4 +57,11 @@ fn run() -> io::Result<()> {
     }
 
     Ok(())
+}
+
+fn reader_for(filename: String) -> io::Result<BufferedLogFileReader> {
+    Ok(LogFileReader::new(
+        filename.clone(),
+        Utf8LineReader::new(BufReader::new(File::open(&filename)?))?,
+    ))
 }
