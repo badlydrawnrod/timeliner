@@ -1,8 +1,8 @@
+use crate::utf8_line_reader::Utf8LineReader;
 use chrono::offset::TimeZone;
 use chrono::{DateTime, Utc};
 use std::io::BufRead;
 use std::iter::Peekable;
-use utf8_line_reader::Utf8LineReader;
 
 #[derive(PartialEq)]
 pub enum State {
@@ -72,7 +72,7 @@ impl<T: BufRead> LogFileReader<T> {
                 }
             }
 
-            // The next line does not start with a timestamp, so consume it  and move on.
+            // The next line does not start with a timestamp, so consume it and move on.
             lines.next();
         }
     }

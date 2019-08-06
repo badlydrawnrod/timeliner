@@ -1,15 +1,12 @@
-extern crate chrono;
-extern crate encoding_rs;
-
-use log_file_reader::LogFileReader;
-use log_file_reader::State;
+use crate::log_file_reader::LogFileReader;
+use crate::log_file_reader::State;
+use crate::utf8_line_reader::Utf8LineReader;
 use std::env;
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
 use std::iter::Iterator;
 use std::process;
-use utf8_line_reader::Utf8LineReader;
 
 mod log_file_reader;
 mod utf8_line_reader;
