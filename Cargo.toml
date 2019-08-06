@@ -2,6 +2,7 @@
 name = "timeliner"
 version = "0.1.0"
 authors = ["Badly Drawn Rod <rod@badlydrawngames.com>"]
+edition = "2018"
 description = """
 timeliner is a command line utility that displays the contents of log files in timestamp order.
 """
