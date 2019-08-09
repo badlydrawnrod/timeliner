@@ -13,7 +13,7 @@ impl<T: Read + BufRead> Utf8LineReader<T> {
     /// Creates a Utf8LineReader.
     pub fn new(mut reader: T) -> io::Result<Utf8LineReader<T>> {
         let mut bom = [0; 4];
-        reader.read(&mut bom)?;
+        reader.read_exact(&mut bom)?;
 
         let mut line = String::with_capacity(1024);
 
@@ -42,14 +42,14 @@ impl<T: Read + BufRead> Utf8LineReader<T> {
                 // If it's UTF16_LE then we need one more byte to determine if we have a line feed, ie, U+000a, and not,
                 // for instance, U+020a (Ȋ - latin capital I with inverted breve).
                 let mut b = [0; 1];
-                self.reader.read(&mut b)?;
+                self.reader.read_exact(&mut b)?;
                 buf.push(b[0]);
                 done = b[0] == b'\0';
             }
         }
 
         // If we didn't read anything into the buffer then we're truly done.
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return Ok(true);
         }
 
@@ -59,9 +59,9 @@ impl<T: Read + BufRead> Utf8LineReader<T> {
                 .decode_to_string(&buf[..], &mut self.line, false);
 
         // Trim the trailing LF and CR if present so that we're left with just the line.
-        if self.line.ends_with("\n") {
+        if self.line.ends_with('\n') {
             self.line.pop();
-            if self.line.ends_with("\r") {
+            if self.line.ends_with('\r') {
                 self.line.pop();
             }
         }
